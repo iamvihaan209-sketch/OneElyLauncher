@@ -25,6 +25,41 @@ use oneclient_mc::{
     get_loader_version, resolve_minecraft_version,
 };
 
+const AUTHLIB_INJECTOR_URL: &str =
+    "https://github.com/yushijinhun/authlib-injector/releases/download/v1.2.8/authlib-injector-1.2.8.jar";
+const AUTHLIB_INJECTOR_SHA256: &str =
+    "9c7f4343e6c82034958ffb48c14a2cb0c85928be7283103ce17da00c6d5a7b10";
+
+async fn ensure_ely_authlib_injector() -> LauncherResult<std::path::PathBuf> {
+    let path = paths::data_dir()?.join("authlib-injector-1.2.8.jar");
+    if path.is_file() {
+        return Ok(path);
+    }
+
+    tracing::info!("downloading authlib-injector for Ely.by");
+    let bytes = reqwest::get(AUTHLIB_INJECTOR_URL)
+        .await
+        .map_err(|e| GameError::Spawn(format!("failed to download authlib-injector: {e}")))?
+        .error_for_status()
+        .map_err(|e| GameError::Spawn(format!("failed to download authlib-injector: {e}")))?
+        .bytes()
+        .await
+        .map_err(|e| GameError::Spawn(format!("failed to read authlib-injector download: {e}")))?;
+
+    use sha2::{Digest, Sha256};
+    let digest = format!("{:x}", Sha256::digest(&bytes));
+    if digest != AUTHLIB_INJECTOR_SHA256 {
+        return Err(GameError::Spawn(format!(
+            "authlib-injector checksum mismatch: expected {AUTHLIB_INJECTOR_SHA256}, got {digest}"
+        ))
+        .into());
+    }
+
+    polyio::create_dir_all(paths::data_dir()?).await?;
+    polyio::write(&path, &bytes).await?;
+    Ok(path)
+}
+
 pub fn is_running(state: &LauncherState, cluster_id: i64) -> bool {
     state.games.is_running(cluster_id)
 }
@@ -314,6 +349,12 @@ async fn start(
         &java.os_arch,
         java.major,
     )?;
+
+    if account.is_ely_by() {
+        let injector = ensure_ely_authlib_injector().await?;
+        jvm_args.push(format!("-javaagent:{}=ely.by", injector.display()));
+        jvm_args.push("-Dauthlibinjector.noLogFile=true".to_string());
+    }
 
     let mods_dir = paths::cluster_mods_dir(&cluster.folder_name)?;
     if let Some(arg) = crate::game::mods_folder_argument(
