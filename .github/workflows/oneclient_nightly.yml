@@ -1,11 +1,12 @@
-name: Build OneLauncher
+name: Nightly Build
 
 on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
   push:
     branches:
       - main
-  pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,24 +15,28 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    name: Build ${{ matrix.os }}
+  nightly:
+    name: Nightly ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-
-          - os: macos-13
+          - name: macOS Intel
+            os: macos-13
             target: x86_64-apple-darwin
 
-          - os: macos-latest
+          - name: macOS Apple Silicon
+            os: macos-latest
             target: aarch64-apple-darwin
 
-          - os: windows-latest
+          - name: Linux x86_64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+
+          - name: Windows x86_64
+            os: windows-latest
             target: x86_64-pc-windows-msvc
 
     steps:
@@ -56,10 +61,10 @@ jobs:
             librsvg2-dev
 
       - name: Install cargo-packager
-        run: |
-          cargo install cargo-packager --locked
+        run: cargo install cargo-packager --locked
 
-      - name: Fix Ely.by module declaration
+      # Make sure the Ely.by module is declared.
+      - name: Fix Ely.by module
         shell: bash
         run: |
           python3 - <<'PY'
@@ -69,24 +74,102 @@ jobs:
           text = path.read_text()
 
           if "mod ely;" not in text:
-              lines = text.splitlines()
-
-              insert_at = 0
-              while insert_at < len(lines) and (
-                  lines[insert_at].startswith("//")
-                  or not lines[insert_at].strip()
-              ):
-                  insert_at += 1
-
-              lines.insert(insert_at, "mod ely;")
-              path.write_text("\n".join(lines) + "\n")
+              text = "mod ely;\n" + text
+              path.write_text(text)
           PY
 
-      - name: Check
-        run: cargo check -p oneclient_app --target ${{ matrix.target }}
+      # Make the Ely.by hooks publicly available to the app.
+      - name: Fix Ely.by hook exports
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("packages/oneclient_app/src/hooks/queries/auth.rs")
+          text = path.read_text()
+
+          # Ensure the mutation is public.
+          text = text.replace(
+              "struct AddElyByAccountKeys",
+              "pub struct AddElyByAccountKeys"
+          )
+
+          text = text.replace(
+              "struct AddElyByAccountMutation",
+              "pub struct AddElyByAccountMutation"
+          )
+
+          path.write_text(text)
+
+          path = Path("packages/oneclient_app/src/hooks/mod.rs")
+          text = path.read_text()
+
+          if "AddElyByAccountKeys" not in text:
+              text += "\n"
+              text += "pub use queries::auth::{AddElyByAccountKeys, use_add_ely_by_account};\n"
+
+          path.write_text(text)
+          PY
+
+      # Freya does not provide InputMode::Password in this version.
+      - name: Fix Ely.by password input
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path(
+              "packages/oneclient_app/src/view/app/settings/accounts.rs"
+          )
+
+          text = path.read_text()
+
+          text = text.replace(
+              ".mode(InputMode::Password)",
+              ""
+          )
+
+          path.write_text(text)
+          PY
+
+      # Remove an accidental duplicate Ely.by match arm.
+      - name: Remove duplicate Ely.by match arm
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path(
+              "packages/oneclient_app/src/view/app/settings/accounts.rs"
+          )
+
+          text = path.read_text()
+
+          duplicate = (
+              'AccountKind::ElyBy => "Ely.by",\n'
+              '        AccountKind::ElyBy => "Ely.by",'
+          )
+
+          text = text.replace(
+              duplicate,
+              'AccountKind::ElyBy => "Ely.by",'
+          )
+
+          path.write_text(text)
+          PY
+
+      - name: Cargo check
+        run: |
+          cargo check \
+            -p oneclient_app \
+            --target ${{ matrix.target }}
 
       - name: Build
-        run: cargo build -p oneclient_app --release --target ${{ matrix.target }}
+        run: |
+          cargo build \
+            -p oneclient_app \
+            --release \
+            --target ${{ matrix.target }}
 
       - name: Package macOS
         if: runner.os == 'macOS'
@@ -110,10 +193,10 @@ jobs:
             --release \
             -p oneclient_app
 
-      - name: Upload artifacts
+      - name: Upload nightly artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OneLauncher-${{ matrix.os }}
+          name: OneLauncher-nightly-${{ matrix.name }}
           path: |
             target/**/release/*.dmg
             target/**/release/*.app
