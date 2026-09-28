@@ -1,5 +1,7 @@
 name: Nightly Build - macOS Intel
 
+# Rebuild against current Ely.by hook re-exports.
+
 on:
   schedule:
     - cron: "0 0 * * *"
