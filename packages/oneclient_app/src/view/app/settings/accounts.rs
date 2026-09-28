@@ -135,7 +135,7 @@ impl Component for SettingsAccounts {
                 default_account,
                 has_microsoft,
                 ely.read().state().is_loading(),
-                ely_error,
+                ely_error.clone(),
                 move |_| show_offline.set(true),
                 move |_| show_ely.set(true),
             ))
@@ -395,7 +395,7 @@ fn ely_dialog(
                                         .text("Sign in"),
                                 ),
                         ),
-                ),
+                )
         )
         .into_element()
 }
@@ -475,7 +475,7 @@ fn offline_dialog(
                                         .text("Add account"),
                                 ),
                         ),
-                ),
+                )
         )
         .into_element()
 }
@@ -698,7 +698,6 @@ impl Component for AccountRow {
 fn kind_label(kind: AccountKind) -> &'static str {
     match kind {
         AccountKind::Microsoft => "Microsoft",
-        AccountKind::ElyBy => "Ely.by",
         AccountKind::ElyBy => "Ely.by",
         AccountKind::Offline => "Offline",
     }
