@@ -160,7 +160,8 @@ impl AuthService {
             let mut chain = String::new();
             let mut source = std::error::Error::source(err);
             while let Some(cause) = source {
-                chain.push_str(&format!("\n  caused by: {cause}"));
+                chain.push_str(&format!("
+  caused by: {cause}"));
                 source = cause.source();
             }
             tracing::warn!("Microsoft login failed: {err}{chain}");
