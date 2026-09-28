@@ -237,6 +237,7 @@ jobs:
           cargo packager \
             --release \
             -p oneclient_app \
+            --target x86_64-apple-darwin \
             --formats app,dmg
 
       # ---------------------------------------------------------
