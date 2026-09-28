@@ -43,8 +43,10 @@ impl Component for SettingsAccounts {
         let mut username = use_state(String::new);
         let mut show_offline = use_state(|| false);
         let mut closing_offline = use_state(|| false);
-        let mut show_ely = use_state(|| false);\n        let mut closing_ely = use_state(|| false);
-        let mut ely_username = use_state(String::new);\n        let mut ely_password = use_state(String::new);
+        let mut show_ely = use_state(|| false);
+        let mut closing_ely = use_state(|| false);
+        let mut ely_username = use_state(String::new);
+        let mut ely_password = use_state(String::new);
 
         use_side_effect(move || {
             if *closing_ely.read() {
@@ -696,7 +698,8 @@ impl Component for AccountRow {
 fn kind_label(kind: AccountKind) -> &'static str {
     match kind {
         AccountKind::Microsoft => "Microsoft",
-        AccountKind::ElyBy => "Ely.by",\n        AccountKind::ElyBy => "Ely.by",
+        AccountKind::ElyBy => "Ely.by",
+        AccountKind::ElyBy => "Ely.by",
         AccountKind::Offline => "Offline",
     }
 }
