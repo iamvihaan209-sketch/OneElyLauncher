@@ -25,7 +25,7 @@ pub use active_cluster::{
 
 pub use actions::{Actions, NotificationBuilder, PumpSignal};
 pub use queries::{
-    AddOfflineAccountKeys, BROWSE_PAGE_SIZE, BeginMicrosoftLoginMutation, CachedImageQuery,
+    AddElyByAccountKeys, AddOfflineAccountKeys, BROWSE_PAGE_SIZE, BeginMicrosoftLoginMutation, CachedImageQuery,
     CancelMicrosoftLoginKeys, CancelMicrosoftLoginMutation, ClusterAction, ClusterBundles,
     ClusterLogsQuery, ClusterMutation, DiscardLeftoversKeys, DiscardLeftoversMutation,
     FinishMicrosoftLoginMutation, LeftoversQuery, LogAction, LogContentQuery, MigrationQuery,
@@ -47,7 +47,7 @@ pub use queries::{
     terms_is_loading, try_account, try_accounts, try_cluster_analytics, try_cluster_logs,
     try_cluster_screenshots, try_default_account, try_game_profile, try_global_analytics,
     try_leftovers, try_log_content, try_storage_report, use_account, use_accounts,
-    use_add_microsoft_account, use_add_offline_account, use_begin_microsoft_login,
+    use_add_ely_by_account, use_add_microsoft_account, use_add_offline_account, use_begin_microsoft_login,
     use_bundle_overrides, use_bundle_updates, use_bundles_with_status, use_cached_image,
     use_cancel_microsoft_login, use_changelog, use_cluster, use_cluster_analytics,
     use_cluster_content, use_cluster_logs, use_cluster_mutation, use_cluster_profile,
