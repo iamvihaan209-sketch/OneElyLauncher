@@ -29,7 +29,11 @@ impl MinecraftAccount {
         self.kind == AccountKind::Microsoft
     }
 
-    pub fn is_ely_by(&self) -> bool {\n        self.kind == AccountKind::ElyBy\n    }\n\n    pub fn is_offline(&self) -> bool {
+    pub fn is_ely_by(&self) -> bool {
+        self.kind == AccountKind::ElyBy
+    }
+
+    pub fn is_offline(&self) -> bool {
         self.kind == AccountKind::Offline
     }
 
