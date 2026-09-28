@@ -275,7 +275,7 @@ impl AuthService {
 
         // Re-read under the guard whoever held it may have just refreshed
         let existing = self.account_snapshot(id).await?;
-        if !existing.is_microsoft() || (!force && !existing.is_expired()) {
+        if !force && !existing.is_expired() {
             return Ok(existing);
         }
 
