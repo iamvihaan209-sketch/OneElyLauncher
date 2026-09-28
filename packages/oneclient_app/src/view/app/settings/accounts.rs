@@ -11,7 +11,8 @@ use crate::components::{
 };
 use crate::hooks::{
     AddOfflineAccountKeys, RefreshAccountKeys, RemoveAccountKeys, SetDefaultAccountKeys,
-    accounts_have_microsoft, try_accounts, try_default_account, use_accounts,\n    use_add_ely_by_account,
+    accounts_have_microsoft, try_accounts, try_default_account, use_accounts,
+    use_add_ely_by_account,
     use_add_offline_account, use_current_account, use_refresh_account, use_remove_account,
     use_set_default_account,
 };
@@ -36,11 +37,14 @@ impl Component for SettingsAccounts {
         let add_offline = use_add_offline_account();
         let set_default = use_set_default_account();
         let remove = use_remove_account();
-        let refresh = use_refresh_account();\n        let ely = use_add_ely_by_account();
+        let refresh = use_refresh_account();
+        let ely = use_add_ely_by_account();
 
         let mut username = use_state(String::new);
         let mut show_offline = use_state(|| false);
-        let mut closing_offline = use_state(|| false);\n        let mut show_ely = use_state(|| false);\n        let mut closing_ely = use_state(|| false);\n        let mut ely_username = use_state(String::new);\n        let mut ely_password = use_state(String::new);
+        let mut closing_offline = use_state(|| false);
+        let mut show_ely = use_state(|| false);\n        let mut closing_ely = use_state(|| false);
+        let mut ely_username = use_state(String::new);\n        let mut ely_password = use_state(String::new);
 
         use_side_effect(move || {
             if *closing_ely.read() {
@@ -82,7 +86,8 @@ impl Component for SettingsAccounts {
         let offline_uuid = (!offline_name.is_empty())
             .then(|| oneclient_auth::offline_uuid(&offline_name).to_string());
 
-        let offline_error = mutation_err_text(&add_offline);\n        let ely_error = mutation_err_text(&ely);
+        let offline_error = mutation_err_text(&add_offline);
+        let ely_error = mutation_err_text(&ely);
 
         let on_confirm_ely = move |_| {
             let username = ely_username.peek().trim().to_string();
@@ -231,7 +236,7 @@ fn hero(
                                     Button::new()
                                         .primary()
                                         .enabled(!ely_pending)
-                                        .on_press(on_add_microsoft)
+                                        .on_press(on_add_ely)
                                         .child(Icon::new(IconType::Globe01).size(16.))
                                         .text(if ely_pending {
                                             "Signing in..."
@@ -690,7 +695,8 @@ impl Component for AccountRow {
 
 fn kind_label(kind: AccountKind) -> &'static str {
     match kind {
-        AccountKind::Microsoft => "Microsoft",\n        AccountKind::ElyBy => "Ely.by",
+        AccountKind::Microsoft => "Microsoft",
+        AccountKind::ElyBy => "Ely.by",\n        AccountKind::ElyBy => "Ely.by",
         AccountKind::Offline => "Offline",
     }
 }
