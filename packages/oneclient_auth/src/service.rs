@@ -7,7 +7,7 @@ use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
-use crate::data::{MicrosoftLoginSession, MinecraftAccount};
+use crate::data::{AccountKind, MicrosoftLoginSession, MinecraftAccount};\nuse crate::ely;
 use crate::error::{AuthError, AuthResult, MinecraftAuthError};
 use crate::msa::{self, PendingBrowserLogin};
 use crate::store::{self, CredentialsStore};
@@ -190,6 +190,22 @@ impl AuthService {
     }
 
     #[tracing::instrument(skip(self), fields(username = %username))]
+    #[tracing::instrument(skip(self, username, password), fields(username = %username))]
+    pub async fn add_ely_by_account(
+        &self,
+        username: String,
+        password: String,
+    ) -> AuthResult<MinecraftAccount> {
+        let account = ely::authenticate(self.net.http(), &username, &password)
+            .await
+            .map_err(AuthError::from)?;
+        self.store
+            .lock()
+            .await
+            .commit_account(account, &self.events)
+            .await
+    }
+
     pub async fn add_offline_account(&self, username: String) -> AuthResult<MinecraftAccount> {
         self.store
             .lock()
@@ -250,7 +266,7 @@ impl AuthService {
     #[tracing::instrument(level = "debug", skip(self), fields(%id))]
     async fn renew_token(&self, id: Uuid, force: bool) -> AuthResult<MinecraftAccount> {
         let existing = self.account_snapshot(id).await?;
-        if !existing.is_microsoft() || (!force && !existing.is_expired()) {
+        if !force && !existing.is_expired() {
             return Ok(existing);
         }
 
