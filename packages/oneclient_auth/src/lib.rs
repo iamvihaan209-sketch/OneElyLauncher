@@ -10,7 +10,7 @@ mod offline;
 mod service;
 mod store;
 
-pub use data::{
+pub use ely::{authenticate as authenticate_ely_by, refresh as refresh_ely_by};\npub use data::{
     AccountKind, BrowserLogin, DeviceCodeLogin, MicrosoftLoginSession, MinecraftAccount,
 };
 pub use diagnostics::{AuthErrorGuidance, AuthErrorSample, diagnose_auth_error, preview_samples};
