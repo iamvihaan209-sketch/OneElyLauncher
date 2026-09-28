@@ -7,7 +7,8 @@ use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
-use crate::data::{AccountKind, MicrosoftLoginSession, MinecraftAccount};\nuse crate::ely;
+use crate::data::{AccountKind, MicrosoftLoginSession, MinecraftAccount};
+use crate::ely;
 use crate::error::{AuthError, AuthResult, MinecraftAuthError};
 use crate::msa::{self, PendingBrowserLogin};
 use crate::store::{self, CredentialsStore};
