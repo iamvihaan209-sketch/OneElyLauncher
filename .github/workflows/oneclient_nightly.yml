@@ -16,16 +16,33 @@ env:
 
 jobs:
   nightly:
-    name: Nightly ${{ matrix.name }}
+    name: Nightly - ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Intel macOS
           - name: macOS Intel
-            os: macos-15-intel
+            os: macos-13
             target: x86_64-apple-darwin
+
+          # Apple Silicon macOS
+          - name: macOS Apple Silicon
+            os: macos-latest
+            target: aarch64-apple-darwin
+
+          # Linux
+          - name: Linux x86_64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+
+          # Windows
+          - name: Windows x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,9 +65,12 @@ jobs:
             librsvg2-dev
 
       - name: Install cargo-packager
-        run: cargo install cargo-packager --locked
+        run: |
+          cargo install cargo-packager --locked
 
-      # Make sure the Ely.by module is declared.
+      # ---------------------------------------------------------
+      # Fix Ely.by module declaration
+      # ---------------------------------------------------------
       - name: Fix Ely.by module
         shell: bash
         run: |
@@ -60,22 +80,39 @@ jobs:
           path = Path("packages/oneclient_auth/src/lib.rs")
           text = path.read_text()
 
-          if "mod ely;" not in text:
-              text = "mod ely;\n" + text
-              path.write_text(text)
+          if "\nmod ely;" not in text and not text.startswith("mod ely;"):
+              lines = text.splitlines()
+
+              # Keep //! crate documentation at the beginning.
+              insert_at = 0
+
+              while insert_at < len(lines):
+                  line = lines[insert_at].strip()
+
+                  if line.startswith("//!") or line == "":
+                      insert_at += 1
+                  else:
+                      break
+
+              lines.insert(insert_at, "mod ely;")
+              path.write_text("\n".join(lines) + "\n")
           PY
 
-      # Make the Ely.by hooks publicly available to the app.
+      # ---------------------------------------------------------
+      # Fix Ely.by hook visibility
+      # ---------------------------------------------------------
       - name: Fix Ely.by hook exports
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path("packages/oneclient_app/src/hooks/queries/auth.rs")
-          text = path.read_text()
+          auth = Path(
+              "packages/oneclient_app/src/hooks/queries/auth.rs"
+          )
 
-          # Ensure the mutation is public.
+          text = auth.read_text()
+
           text = text.replace(
               "struct AddElyByAccountKeys",
               "pub struct AddElyByAccountKeys"
@@ -86,19 +123,30 @@ jobs:
               "pub struct AddElyByAccountMutation"
           )
 
-          path.write_text(text)
+          auth.write_text(text)
 
-          path = Path("packages/oneclient_app/src/hooks/mod.rs")
-          text = path.read_text()
+          hooks = Path(
+              "packages/oneclient_app/src/hooks/mod.rs"
+          )
 
-          if "AddElyByAccountKeys" not in text:
-              text += "\n"
-              text += "pub use queries::auth::{AddElyByAccountKeys, use_add_ely_by_account};\n"
+          text = hooks.read_text()
 
-          path.write_text(text)
+          export = (
+              "pub use queries::auth::{"
+              "AddElyByAccountKeys, "
+              "use_add_ely_by_account"
+              "};"
+          )
+
+          if "use_add_ely_by_account" not in text:
+              text += "\n" + export + "\n"
+
+          hooks.write_text(text)
           PY
 
-      # Freya does not provide InputMode::Password in this version.
+      # ---------------------------------------------------------
+      # Freya does not provide InputMode::Password here
+      # ---------------------------------------------------------
       - name: Fix Ely.by password input
         shell: bash
         run: |
@@ -119,8 +167,10 @@ jobs:
           path.write_text(text)
           PY
 
-      # Remove an accidental duplicate Ely.by match arm.
-      - name: Remove duplicate Ely.by match arm
+      # ---------------------------------------------------------
+      # Remove accidental duplicate Ely.by match arm
+      # ---------------------------------------------------------
+      - name: Remove duplicate Ely.by match
         shell: bash
         run: |
           python3 - <<'PY'
@@ -145,19 +195,60 @@ jobs:
           path.write_text(text)
           PY
 
+      # ---------------------------------------------------------
+      # Remove unused imports
+      # ---------------------------------------------------------
+      - name: Clean Ely.by imports
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # ely.rs
+          path = Path("packages/oneclient_auth/src/ely.rs")
+          text = path.read_text()
+
+          text = text.replace(
+              "use serde::{Deserialize, Serialize};",
+              "use serde::Deserialize;"
+          )
+
+          path.write_text(text)
+
+          # service.rs
+          path = Path("packages/oneclient_auth/src/service.rs")
+          text = path.read_text()
+
+          text = text.replace(
+              "use crate::data::{AccountKind, MicrosoftLoginSession, MinecraftAccount};",
+              "use crate::data::{MicrosoftLoginSession, MinecraftAccount};"
+          )
+
+          path.write_text(text)
+          PY
+
+      # ---------------------------------------------------------
+      # Verify compilation
+      # ---------------------------------------------------------
       - name: Cargo check
         run: |
           cargo check \
             -p oneclient_app \
             --target ${{ matrix.target }}
 
-      - name: Build
+      # ---------------------------------------------------------
+      # Build
+      # ---------------------------------------------------------
+      - name: Cargo build
         run: |
           cargo build \
             -p oneclient_app \
             --release \
             --target ${{ matrix.target }}
 
+      # ---------------------------------------------------------
+      # Package macOS
+      # ---------------------------------------------------------
       - name: Package macOS
         if: runner.os == 'macOS'
         run: |
@@ -166,6 +257,9 @@ jobs:
             -p oneclient_app \
             --formats app,dmg
 
+      # ---------------------------------------------------------
+      # Package Linux
+      # ---------------------------------------------------------
       - name: Package Linux
         if: runner.os == 'Linux'
         run: |
@@ -173,6 +267,9 @@ jobs:
             --release \
             -p oneclient_app
 
+      # ---------------------------------------------------------
+      # Package Windows
+      # ---------------------------------------------------------
       - name: Package Windows
         if: runner.os == 'Windows'
         run: |
@@ -180,6 +277,9 @@ jobs:
             --release \
             -p oneclient_app
 
+      # ---------------------------------------------------------
+      # Upload artifacts
+      # ---------------------------------------------------------
       - name: Upload nightly artifacts
         uses: actions/upload-artifact@v4
         with:
