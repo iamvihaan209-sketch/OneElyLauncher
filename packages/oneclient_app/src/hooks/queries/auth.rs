@@ -366,7 +366,8 @@ impl MutationCapability for AddElyByAccountMutation {
 
 pub type UseSetDefaultAccount = UseMutation<SetDefaultAccountMutation>;
 pub type UseRemoveAccount = UseMutation<RemoveAccountMutation>;
-pub type UseRefreshAccount = UseMutation<RefreshAccountMutation>;\npub type UseAddElyByAccount = UseMutation<AddElyByAccountMutation>;
+pub type UseRefreshAccount = UseMutation<RefreshAccountMutation>;
+pub type UseAddElyByAccount = UseMutation<AddElyByAccountMutation>;
 
 pub fn use_begin_microsoft_login() -> UseMutation<BeginMicrosoftLoginMutation> {
     use_mutation(Mutation::new(BeginMicrosoftLoginMutation))
@@ -380,7 +381,11 @@ pub fn use_cancel_microsoft_login() -> UseMutation<CancelMicrosoftLoginMutation>
     use_mutation(Mutation::new(CancelMicrosoftLoginMutation))
 }
 
-pub fn use_add_ely_by_account() -> UseAddElyByAccount {\n    use_mutation(Mutation::new(AddElyByAccountMutation))\n}\n\npub fn use_add_microsoft_account() -> UseMutation<AddMicrosoftAccountMutation> {
+pub fn use_add_ely_by_account() -> UseAddElyByAccount {
+    use_mutation(Mutation::new(AddElyByAccountMutation))
+}
+
+pub fn use_add_microsoft_account() -> UseMutation<AddMicrosoftAccountMutation> {
     use_mutation(Mutation::new(AddMicrosoftAccountMutation))
 }
 
