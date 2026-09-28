@@ -76,53 +76,24 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path(
-              "packages/oneclient_app/src/hooks/queries/mod.rs"
-          )
-
+          path = Path("packages/oneclient_app/src/hooks/queries/mod.rs")
           text = path.read_text()
 
-          # Add the Ely.by key type to the existing auth re-export.
-          old = (
-              "pub use auth::{\n"
-              "    AddOfflineAccountKeys,"
-          )
-
-          new = (
-              "pub use auth::{\n"
-              "    AddElyByAccountKeys, AddOfflineAccountKeys,"
-          )
-
+          # Add the key type after AddOfflineAccountKeys.
           if "AddElyByAccountKeys" not in text:
-              if old not in text:
-                  raise SystemExit(
-                      "Could not find the existing auth re-export block"
-                  )
+              text = text.replace(
+                  "AddOfflineAccountKeys,",
+                  "AddElyByAccountKeys, AddOfflineAccountKeys,",
+                  1
+              )
 
-              text = text.replace(old, new, 1)
-
-          # Add the Ely.by mutation hook to the existing auth exports.
-          old = (
-              "use_add_account"
-          )
-
-          # The actual existing block contains these account hooks.
-          anchor = (
-              "use_add_microsoft_account, use_add_offline_account,"
-          )
-
-          replacement = (
-              "use_add_ely_by_account, use_add_microsoft_account, "
-              "use_add_offline_account,"
-          )
-
+          # Add the Ely.by hook next to the other account hooks.
           if "use_add_ely_by_account" not in text:
-              if anchor not in text:
-                  raise SystemExit(
-                      "Could not find the existing account hook exports"
-                  )
-
-              text = text.replace(anchor, replacement, 1)
+              text = text.replace(
+                  "use_add_microsoft_account,",
+                  "use_add_ely_by_account, use_add_microsoft_account,",
+                  1
+              )
 
           path.write_text(text)
           PY
