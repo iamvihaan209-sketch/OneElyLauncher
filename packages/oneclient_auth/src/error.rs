@@ -69,6 +69,11 @@ pub enum MinecraftAuthError {
         message: String,
         redirect: Option<String>,
     },
+    #[error("Ely.by authentication failed during {step:?}: {message}")]
+    ElyError {
+        step: MinecraftAuthStep,
+        message: String,
+    },
     #[error(
         "The sign-in service returned an error (HTTP {status_code}) during step {step:?}. Please wait a moment and try again."
     )]
