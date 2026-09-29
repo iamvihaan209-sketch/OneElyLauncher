@@ -11,7 +11,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -239,6 +239,28 @@ jobs:
             -p oneclient_app \
             --target x86_64-apple-darwin \
             --formats app,dmg
+
+      # ---------------------------------------------------------
+      # Publish the successful Intel build as a GitHub Release.
+      # Each workflow run gets its own unique nightly tag.
+      # ---------------------------------------------------------
+      - name: Publish GitHub Release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DMG="$(find target -type f -name '*.dmg' -print -quit)"
+          APP="$(find target -type d -name '*.app' -print -quit)"
+
+          test -n "$DMG"
+          test -n "$APP"
+
+          APP_ZIP="$RUNNER_TEMP/OneLauncher-macOS-Intel.app.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "$APP_ZIP"
+
+          TAG="nightly-$GITHUB_RUN_NUMBER"
+
+          GH_TOKEN="$GITHUB_TOKEN" gh release create "$TAG"             "$DMG"             "$APP_ZIP"             --title "OneLauncher macOS Intel Nightly #$GITHUB_RUN_NUMBER"             --notes "Automated Intel macOS build from commit $GITHUB_SHA."             --prerelease
 
       # ---------------------------------------------------------
       # Upload Intel artifacts
