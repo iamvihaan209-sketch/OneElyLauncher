@@ -3,10 +3,9 @@ use oneclient_auth::MinecraftAccount;
 
 use crate::components::{Avatar, Button, Icon, IconType, OverlayPopup, TextInput, use_microsoft_login};
 use crate::hooks::{try_default_account, use_add_ely_by_account, AddElyByAccountKeys, use_current_account};
-use crate::theme::colors;
-use crate::ui::border_all_color;
 use crate::routes::Route;
 use crate::theme::colors;
+use crate::ui::border_all_color;
 use crate::view::onboarding::{
     onboarding_illustration, onboarding_nav, onboarding_page, step_heading,
 };
@@ -89,7 +88,8 @@ impl Component for OnboardingAccount {
                     on_confirm_ely,
                     show_ely,
                 )
-            })
+            }))
+            .into_element()
     }
 }
 
