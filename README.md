@@ -12,8 +12,8 @@ OneLauncher is a WIP Minecraft launcher giving power-users the greatest customiz
 
 ## Installing
 
-You can install the latest release of OneClient from our website: [https://polyfrost.org/projects/oneclient](https://polyfrost.org/projects/oneclient)
-as well as our [GitHub releases](https://github.com/Polyfrost/OneLauncher/releases/latest).
+You can install the latest release of OneClient from our website: [https://polyfrost.org/projects/oneclient](https://polyfrost.org/projects/oneclient) (not ely.by)
+as well as our [GitHub releases](https://github.com/iamvihaan209-sketch/OneElyLauncher/releases/latest).
 
 | Windows (x86_64) | macOS (Intel & Apple Silicon) | Linux (x86_64)                                          |
 |------------------|-------------------------------|---------------------------------------------------------|
