@@ -207,6 +207,34 @@ impl MutationCapability for AddMicrosoftAccountMutation {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct AddElyByAccountMutation;
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct AddElyByAccountKeys {
+    pub username: String,
+    pub password: String,
+}
+
+impl MutationCapability for AddElyByAccountMutation {
+    type Ok = MinecraftAccount;
+    type Err = LauncherError;
+    type Keys = AddElyByAccountKeys;
+
+    async fn run(&self, keys: &Self::Keys) -> Result<Self::Ok, Self::Err> {
+        Ok(crate::launcher::state()?
+            .auth
+            .add_ely_by_account(keys.username.clone(), keys.password.clone())
+            .await?)
+    }
+
+    async fn on_settled(&self, _keys: &Self::Keys, result: &Result<Self::Ok, Self::Err>) {
+        if let Ok(account) = result {
+            invalidate_auth_queries(Some(account.id)).await;
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct AddOfflineAccountMutation;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -339,6 +367,7 @@ impl MutationCapability for RefreshAllAccountsMutation {
 pub type UseSetDefaultAccount = UseMutation<SetDefaultAccountMutation>;
 pub type UseRemoveAccount = UseMutation<RemoveAccountMutation>;
 pub type UseRefreshAccount = UseMutation<RefreshAccountMutation>;
+pub type UseAddElyByAccount = UseMutation<AddElyByAccountMutation>;
 
 pub fn use_begin_microsoft_login() -> UseMutation<BeginMicrosoftLoginMutation> {
     use_mutation(Mutation::new(BeginMicrosoftLoginMutation))
@@ -350,6 +379,10 @@ pub fn use_finish_microsoft_login() -> UseMutation<FinishMicrosoftLoginMutation>
 
 pub fn use_cancel_microsoft_login() -> UseMutation<CancelMicrosoftLoginMutation> {
     use_mutation(Mutation::new(CancelMicrosoftLoginMutation))
+}
+
+pub fn use_add_ely_by_account() -> UseAddElyByAccount {
+    use_mutation(Mutation::new(AddElyByAccountMutation))
 }
 
 pub fn use_add_microsoft_account() -> UseMutation<AddMicrosoftAccountMutation> {
