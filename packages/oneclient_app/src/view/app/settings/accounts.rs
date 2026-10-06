@@ -12,6 +12,7 @@ use crate::components::{
 use crate::hooks::{
     AddOfflineAccountKeys, RefreshAccountKeys, RemoveAccountKeys, SetDefaultAccountKeys,
     accounts_have_microsoft, try_accounts, try_default_account, use_accounts,
+    use_add_ely_by_account,
     use_add_offline_account, use_current_account, use_refresh_account, use_remove_account,
     use_set_default_account,
 };
@@ -37,12 +38,31 @@ impl Component for SettingsAccounts {
         let set_default = use_set_default_account();
         let remove = use_remove_account();
         let refresh = use_refresh_account();
+        let ely = use_add_ely_by_account();
 
         let mut username = use_state(String::new);
         let mut show_offline = use_state(|| false);
         let mut closing_offline = use_state(|| false);
+        let mut show_ely = use_state(|| false);
+        let mut closing_ely = use_state(|| false);
+        let mut ely_username = use_state(String::new);
+        let mut ely_password = use_state(String::new);
 
         use_side_effect(move || {
+            if *closing_ely.read() {
+                match &*ely.read().state() {
+                    MutationStateData::Settled { res: Ok(_), .. } => {
+                        closing_ely.set(false);
+                        show_ely.set(false);
+                        ely_username.set(String::new());
+                        ely_password.set(String::new());
+                    }
+                    MutationStateData::Settled { res: Err(_), .. } => {
+                        closing_ely.set(false);
+                    }
+                    _ => {}
+                }
+            }
             if !*closing_offline.read() {
                 return;
             }
@@ -69,6 +89,17 @@ impl Component for SettingsAccounts {
             .then(|| oneclient_auth::offline_uuid(&offline_name).to_string());
 
         let offline_error = mutation_err_text(&add_offline);
+        let ely_error = mutation_err_text(&ely);
+
+        let on_confirm_ely = move |_| {
+            let username = ely_username.peek().trim().to_string();
+            let password = ely_password.peek().clone();
+            if username.is_empty() || password.is_empty() {
+                return;
+            }
+            ely.mutate(crate::hooks::AddElyByAccountKeys { username, password });
+            closing_ely.set(true);
+        };
 
         let on_confirm_offline = move |_| {
             let name = username.peek().trim().to_string();
@@ -103,16 +134,22 @@ impl Component for SettingsAccounts {
             .child(hero(
                 default_account,
                 has_microsoft,
-                msa.pending,
-                msa.error.clone(),
+                ely.read().state().is_loading(),
+                ely_error.clone(),
                 move |_| show_offline.set(true),
-                {
-                    let msa = msa.clone();
-                    move |_| msa.start()
-                },
+                move |_| show_ely.set(true),
             ))
             .child(section_header("YOUR ACCOUNTS"))
             .children(rows)
+            .maybe_child(show_ely.read().then(|| {
+                ely_dialog(
+                    ely_username,
+                    ely_password,
+                    ely_error,
+                    on_confirm_ely,
+                    show_ely,
+                )
+            }))
             .maybe_child(show_offline.read().then(|| {
                 offline_dialog(
                     username,
@@ -130,10 +167,10 @@ impl Component for SettingsAccounts {
 fn hero(
     account: Option<MinecraftAccount>,
     has_microsoft: bool,
-    microsoft_pending: bool,
+    ely_pending: bool,
     error: Option<String>,
     on_open_offline: impl FnMut(Event<PressEventData>) + 'static,
-    on_add_microsoft: impl FnMut(Event<PressEventData>) + 'static,
+    on_add_ely: impl FnMut(Event<PressEventData>) + 'static,
 ) -> impl IntoElement {
     let (name, subtitle) = match &account {
         Some(account) => (account.username.clone(), kind_label(account.kind)),
@@ -200,13 +237,13 @@ fn hero(
                                 .child(
                                     Button::new()
                                         .primary()
-                                        .enabled(!microsoft_pending)
-                                        .on_press(on_add_microsoft)
+                                        .enabled(!ely_pending)
+                                        .on_press(on_add_ely)
                                         .child(Icon::new(IconType::Globe01).size(16.))
-                                        .text(if microsoft_pending {
+                                        .text(if ely_pending {
                                             "Signing in..."
                                         } else {
-                                            "Add Microsoft"
+                                            "Add Ely.by"
                                         }),
                                 )
                                 .child(
@@ -284,6 +321,85 @@ where
     }
 }
 
+fn ely_dialog(
+    username: State<String>,
+    password: State<String>,
+    error: Option<String>,
+    on_confirm: impl FnMut(Event<PressEventData>) + 'static,
+    mut show_ely: State<bool>,
+) -> impl IntoElement {
+    OverlayPopup::new()
+        .on_close(move |()| show_ely.set(false))
+        .child(
+            rect()
+                .width(Size::window_percent(100.))
+                .height(Size::window_percent(100.))
+                .center()
+                .child(
+                    rect()
+                        .vertical()
+                        .width(Size::px(380.))
+                        .max_width(Size::window_percent(90.))
+                        .spacing(16.)
+                        .padding(Gaps::new_all(20.))
+                        .corner_radius(CornerRadius::new_all(16.))
+                        .background(colors::page_elevated())
+                        .border(border_all_color(1., colors::component_border()))
+                        .child(
+                            label()
+                                .text("Add Ely.by account")
+                                .font_size(18.)
+                                .font_weight(FontWeight::SEMI_BOLD)
+                                .color(colors::fg_primary()),
+                        )
+                        .child(
+                            rect()
+                                .vertical()
+                                .width(Size::fill())
+                                .spacing(6.)
+                                .child(field_label("E-mail or username"))
+                                .child(TextInput::new(username).placeholder("Ely.by username or e-mail")),
+                        )
+                        .child(
+                            rect()
+                                .vertical()
+                                .width(Size::fill())
+                                .spacing(6.)
+                                .child(field_label("Password"))
+                                .child(
+                                    TextInput::new(password)
+                                        .placeholder("Ely.by password")
+                                        .mode(InputMode::Password),
+                                ),
+                        )
+                        .map(error, |el, msg| {
+                            el.child(hint_line(IconType::AlertTriangle, msg, colors::danger()))
+                        })
+                        .child(
+                            rect()
+                                .horizontal()
+                                .width(Size::fill())
+                                .main_align(Alignment::End)
+                                .spacing(8.)
+                                .child(
+                                    Button::new()
+                                        .ghost()
+                                        .on_press(move |_| show_ely.set(false))
+                                        .text("Cancel"),
+                                )
+                                .child(
+                                    Button::new()
+                                        .primary()
+                                        .on_press(on_confirm)
+                                        .child(Icon::new(IconType::Globe01).size(16.))
+                                        .text("Sign in"),
+                                ),
+                        ),
+                )
+        )
+        .into_element()
+}
+
 fn offline_dialog(
     username: State<String>,
     uuid_preview: Option<String>,
@@ -359,7 +475,7 @@ fn offline_dialog(
                                         .text("Add account"),
                                 ),
                         ),
-                ),
+                )
         )
         .into_element()
 }
@@ -429,8 +545,8 @@ impl Component for AccountRow {
         let remove = self.remove;
         let refresh = self.refresh;
 
-        let is_microsoft = self.kind == AccountKind::Microsoft;
-        let expired = is_microsoft && self.expires <= Utc::now();
+        let is_authenticated = matches!(self.kind, AccountKind::Microsoft | AccountKind::ElyBy);
+        let expired = is_authenticated && self.expires <= Utc::now();
 
         let mut refreshing = use_state(|| false);
         let is_refreshing = *refreshing.read();
@@ -519,7 +635,7 @@ impl Component for AccountRow {
                             .color(colors::fg_secondary()),
                     ),
             )
-            .maybe_child(is_microsoft.then(|| {
+            .maybe_child(is_authenticated.then(|| {
                 Button::new()
                     .ghost()
                     .icon()
@@ -582,6 +698,7 @@ impl Component for AccountRow {
 fn kind_label(kind: AccountKind) -> &'static str {
     match kind {
         AccountKind::Microsoft => "Microsoft",
+        AccountKind::ElyBy => "Ely.by",
         AccountKind::Offline => "Offline",
     }
 }
