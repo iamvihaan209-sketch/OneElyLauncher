@@ -3,6 +3,7 @@
 //! Accounts persist to `auth.json`
 
 mod data;
+mod ely;
 mod diagnostics;
 mod error;
 mod msa;
@@ -10,6 +11,7 @@ mod offline;
 mod service;
 mod store;
 
+pub use ely::{authenticate as authenticate_ely_by, refresh as refresh_ely_by};
 pub use data::{
     AccountKind, BrowserLogin, DeviceCodeLogin, MicrosoftLoginSession, MinecraftAccount,
 };
