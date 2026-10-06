@@ -13,6 +13,8 @@ pub enum MinecraftAuthStep {
     MinecraftToken,
     MinecraftEntitlements,
     MinecraftProfile,
+    ElyAuthenticate,
+    ElyRefresh,
 }
 
 #[derive(Debug, thiserror::Error)]
