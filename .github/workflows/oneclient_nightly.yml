@@ -3,7 +3,7 @@ name: OneClient Nightly (Unsigned)
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 concurrency:
