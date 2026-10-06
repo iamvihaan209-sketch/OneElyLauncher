@@ -2,10 +2,10 @@
 
 <img src=".github/media/RepoBanner.png" alt="Repository Banner" />
 
-# OneClient  |  OneLauncher
-The monorepo containing the code for OneLauncher, OneClient, and their core backend.
+# OneElyClient  |  OneElyLauncher
+The monorepo containing the code for OneElyLauncher, OneElyClient, and their core backend.
 
-OneClient is a Minecraft client featuring fully 100% open-source components, offering many packaged and pre-configured mods in one click.
+OneElyClient is a Minecraft client featuring fully 100% open-source components, offering many packaged and pre-configured mods in one click.
 OneLauncher is a WIP Minecraft launcher giving power-users the greatest customization whilst featuring a clean UI.
 
 </div>
@@ -13,7 +13,7 @@ OneLauncher is a WIP Minecraft launcher giving power-users the greatest customiz
 ## Installing
 
 You can install the latest release of OneClient from our website: [https://polyfrost.org/projects/oneclient](https://polyfrost.org/projects/oneclient) (not ely.by)
-as well as our [GitHub releases](https://github.com/iamvihaan209-sketch/OneElyLauncher/releases/latest).
+as well as our [GitHub releases](https://github.com/iamvihaan209-sketch/OneElyLauncher/releases/latest). (there is ely.by)
 
 | Windows (x86_64) | macOS (Intel & Apple Silicon) | Linux (x86_64)                                          |
 |------------------|-------------------------------|---------------------------------------------------------|
