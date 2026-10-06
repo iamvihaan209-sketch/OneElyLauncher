@@ -6,6 +6,7 @@ use uuid::Uuid;
 #[serde(rename_all = "snake_case")]
 pub enum AccountKind {
     Microsoft,
+    ElyBy,
     Offline,
 }
 
@@ -15,6 +16,8 @@ pub struct MinecraftAccount {
     pub username: String,
     pub access_token: String,
     pub refresh_token: String,
+    #[serde(default)]
+    pub client_token: String,
     pub expires: DateTime<Utc>,
     #[serde(default = "default_account_kind")]
     pub kind: AccountKind,
@@ -27,6 +30,10 @@ fn default_account_kind() -> AccountKind {
 impl MinecraftAccount {
     pub fn is_microsoft(&self) -> bool {
         self.kind == AccountKind::Microsoft
+    }
+
+    pub fn is_ely_by(&self) -> bool {
+        self.kind == AccountKind::ElyBy
     }
 
     pub fn is_offline(&self) -> bool {
