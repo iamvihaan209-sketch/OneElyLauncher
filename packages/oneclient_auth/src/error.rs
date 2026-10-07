@@ -35,8 +35,6 @@ pub enum MinecraftAuthError {
         source: serde_json::Error,
         status_code: reqwest::StatusCode,
     },
-    // Rendered via `error_chain` reqwest's `Display` names only the URL and the
-    // cause we need (certificate handshake DNS refused) is under it
     #[error(
         "failed to request using HTTP during MSA step {step:?}: {}",
         oneclient_net::error_chain(source)
@@ -45,6 +43,11 @@ pub enum MinecraftAuthError {
         step: MinecraftAuthStep,
         #[source]
         source: reqwest::Error,
+    },
+    #[error("Ely.by authentication failed during step {step:?}: {message}")]
+    ElyError {
+        step: MinecraftAuthStep,
+        message: String,
     },
     #[error("waiting for user to complete device authorization")]
     DeviceAuthorizationPending,
@@ -122,8 +125,6 @@ pub enum AuthError {
     #[error(transparent)]
     Request(#[from] RequestError),
 
-    /// An outcome rather than a failure nothing was written by the time this is
-    /// produced
     #[error("sign-in was cancelled")]
     LoginCancelled,
 
