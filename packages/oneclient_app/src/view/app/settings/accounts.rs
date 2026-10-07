@@ -82,8 +82,6 @@ impl Component for SettingsAccounts {
         let accounts = try_accounts(&accounts_query).unwrap_or_default();
         let default_account = try_default_account(&default_query);
         let default_id = default_account.as_ref().map(|a| a.id);
-        let has_microsoft = accounts_have_microsoft(&accounts);
-
         let offline_name = username.read().trim().to_string();
         let offline_uuid = (!offline_name.is_empty())
             .then(|| oneclient_auth::offline_uuid(&offline_name).to_string());
@@ -133,7 +131,7 @@ impl Component for SettingsAccounts {
         settings_page()
             .child(hero(
                 default_account,
-                has_microsoft,
+                false,
                 ely.read().state().is_loading(),
                 ely_error.clone(),
                 move |_| show_offline.set(true),
@@ -166,7 +164,7 @@ impl Component for SettingsAccounts {
 
 fn hero(
     account: Option<MinecraftAccount>,
-    has_microsoft: bool,
+    _has_microsoft: bool,
     ely_pending: bool,
     error: Option<String>,
     on_open_offline: impl FnMut(Event<PressEventData>) + 'static,
