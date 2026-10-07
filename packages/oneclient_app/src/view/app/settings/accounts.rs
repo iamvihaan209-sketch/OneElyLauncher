@@ -358,7 +358,7 @@ fn ely_dialog(
                                 .child(
                                     TextInput::new(password)
                                         .placeholder("Ely.by password")
-                                        .mode(InputMode::Password),
+                                        .mode(InputMode::new_password()),
                                 ),
                         )
                         .map(error, |el, msg| {
