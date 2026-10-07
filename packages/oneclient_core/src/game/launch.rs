@@ -46,7 +46,7 @@ async fn ensure_ely_authlib_injector() -> LauncherResult<std::path::PathBuf> {
         .await
         .map_err(|e| GameError::Spawn(format!("failed to read authlib-injector download: {e}")))?;
     use sha2::{Digest, Sha256};
-    let digest = format!("{:x}", Sha256::digest(&bytes));
+    let digest = Sha256::digest(&bytes)\n        .iter()\n        .map(|byte| format!("{byte:02x}"))\n        .collect::<String>();
     if digest != AUTHLIB_INJECTOR_SHA256 {
         return Err(GameError::Spawn(format!(
             "authlib-injector checksum mismatch: expected {AUTHLIB_INJECTOR_SHA256}, got {digest}"
