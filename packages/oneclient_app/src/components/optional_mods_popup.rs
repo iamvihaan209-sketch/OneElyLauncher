@@ -232,7 +232,7 @@ fn content(
                 ),
         )
         .child(mod_list(groups, meta, picked))
-        .child(hack_clients_section(groups, dispatch.clone()))
+        .child(hack_clients_section(groups))
         .child(
             rect()
                 .horizontal()
@@ -265,20 +265,8 @@ fn content(
         )
 }
 
-fn hack_clients_section(
-    groups: &[OptionalModsGroup],
-    dispatch: crate::Actions,
-) -> Element {
+fn hack_clients_section(groups: &[OptionalModsGroup]) -> Element {
     let cluster_id = groups.first().map(|group| group.cluster_id).unwrap_or_default();
-
-    let open_client = move |package_id: &'static str| {
-        let route = Route::BrowserPackage {
-            cluster_id,
-            package_type: "mod".to_string(),
-            package_id: package_id.to_string(),
-        };
-        RouterContext::get().push(route);
-    };
 
     rect()
         .vertical()
@@ -305,12 +293,24 @@ fn hack_clients_section(
                 .child(hack_client_card(
                     "Meteor Client",
                     "Fabric utility client",
-                    move || open_client("meteor-client"),
+                    move || {
+                        RouterContext::get().push(Route::BrowserPackage {
+                            cluster_id,
+                            package_type: "mod".to_string(),
+                            package_id: "meteor-client".to_string(),
+                        });
+                    },
                 ))
                 .child(hack_client_card(
                     "Wurst Client",
                     "Fabric utility client",
-                    move || open_client("wurst-client"),
+                    move || {
+                        RouterContext::get().push(Route::BrowserPackage {
+                            cluster_id,
+                            package_type: "mod".to_string(),
+                            package_id: "wurst-client".to_string(),
+                        });
+                    },
                 )),
         )
         .into_element()
