@@ -254,14 +254,7 @@ fn hero(
                         .map(error, |el, msg| {
                             el.child(hint_line(IconType::AlertTriangle, msg, colors::danger()))
                         })
-                        .maybe(!has_microsoft, |el| {
-                            el.child(hint_line(
-                                IconType::InfoCircle,
-                                "Add a Microsoft account before creating offline accounts."
-                                    .to_string(),
-                                colors::fg_secondary(),
-                            ))
-                        }),
+                        ,
                 ),
         )
         .into_element()
