@@ -39,7 +39,7 @@ jobs:
             os_key: darwin
             arch: aarch64
             formats: app,dmg
-          - platform: macos-latest
+          - platform: macos-15-intel
             target: x86_64-apple-darwin
             os_key: darwin
             arch: x86_64
