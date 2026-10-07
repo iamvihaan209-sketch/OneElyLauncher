@@ -110,12 +110,21 @@ fn wizard_rail(wizard: Wizard, picks: &Picks) -> Element {
 #[derive(PartialEq)]
 pub struct CreateInstanceModal {
     on_close: EventHandler<()>,
+    vanilla: bool,
 }
 
 impl CreateInstanceModal {
     pub fn new(on_close: impl Into<EventHandler<()>>) -> Self {
         Self {
             on_close: on_close.into(),
+            vanilla: false,
+        }
+    }
+
+    pub fn vanilla(on_close: impl Into<EventHandler<()>>) -> Self {
+        Self {
+            on_close: on_close.into(),
+            vanilla: true,
         }
     }
 }
@@ -125,11 +134,23 @@ impl Component for CreateInstanceModal {
         let mutation = use_cluster_mutation();
         let wizard = Wizard {
             step: use_state(|| 0usize),
-            choice: use_state(|| TypeChoice::OneClient),
+            choice: use_state(|| {
+                if self.vanilla {
+                    TypeChoice::Scratch
+                } else {
+                    TypeChoice::OneClient
+                }
+            }),
             version: use_state(|| None::<String>),
             filter: use_state(|| kind_bit(GameVersionKind::Release)),
             query: use_state(String::new),
-            loader: use_state(|| LoaderChoice::Fabric),
+            loader: use_state(|| {
+                if self.vanilla {
+                    LoaderChoice::Vanilla
+                } else {
+                    LoaderChoice::Fabric
+                }
+            }),
             loader_version: use_state(|| None::<String>),
             declined: use_state(|| None::<HashSet<String>>),
             modpack_origin: use_state(|| ModpackOrigin::Browse),
