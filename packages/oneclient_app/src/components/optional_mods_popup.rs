@@ -1,6 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
+use crate::Route;
+
 use freya::prelude::*;
+use freya::router::RouterContext;
 use oneclient_content::packages::{CachedPackageMeta, ProviderId};
 use oneclient_db::models::SeenStatus;
 
@@ -229,6 +232,7 @@ fn content(
                 ),
         )
         .child(mod_list(groups, meta, picked))
+        .child(hack_clients_section(groups, dispatch.clone()))
         .child(
             rect()
                 .horizontal()
@@ -259,6 +263,87 @@ fn content(
                         .text(primary_text)
                 }),
         )
+}
+
+fn hack_clients_section(
+    groups: &[OptionalModsGroup],
+    dispatch: crate::Actions,
+) -> Element {
+    let cluster_id = groups.first().map(|group| group.cluster_id).unwrap_or_default();
+
+    let open_client = move |package_id: &'static str| {
+        let route = Route::BrowserPackage {
+            cluster_id,
+            package_type: "mod".to_string(),
+            package_id: package_id.to_string(),
+        };
+        RouterContext::get().push(route);
+    };
+
+    rect()
+        .vertical()
+        .width(Size::fill())
+        .spacing(8.)
+        .child(
+            label()
+                .text("Hack Clients")
+                .font_size(14.)
+                .font_weight(FontWeight::SEMI_BOLD)
+                .color(colors::fg_primary()),
+        )
+        .child(
+            label()
+                .text("Optional client-side add-ons. They are installed separately from the optional mod bundles.")
+                .font_size(12.)
+                .color(colors::fg_secondary()),
+        )
+        .child(
+            rect()
+                .horizontal()
+                .width(Size::fill())
+                .spacing(8.)
+                .child(hack_client_card(
+                    "Meteor Client",
+                    "Fabric utility client",
+                    move || open_client("meteor-client"),
+                ))
+                .child(hack_client_card(
+                    "Wurst Client",
+                    "Fabric utility client",
+                    move || open_client("wurst-client"),
+                )),
+        )
+        .into_element()
+}
+
+fn hack_client_card(
+    title: &'static str,
+    subtitle: &'static str,
+    on_press: impl Fn() + 'static,
+) -> Element {
+    Button::new()
+        .secondary()
+        .width(Size::flex(1.0))
+        .on_press(move |_| on_press())
+        .child(
+            rect()
+                .vertical()
+                .spacing(2.)
+                .child(
+                    label()
+                        .text(title)
+                        .font_size(13.)
+                        .font_weight(FontWeight::MEDIUM)
+                        .color(colors::fg_primary()),
+                )
+                .child(
+                    label()
+                        .text(subtitle)
+                        .font_size(11.)
+                        .color(colors::fg_secondary()),
+                ),
+        )
+        .into_element()
 }
 
 fn grid_columns() -> usize {
