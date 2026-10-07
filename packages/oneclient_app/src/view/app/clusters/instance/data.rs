@@ -144,10 +144,25 @@ fn use_catalogue(choice: TypeChoice) -> Catalogue {
         query_error(&vanilla_query)
     };
 
+    let vanilla = game_versions(&vanilla_query).map(|versions| {
+        if versions.iter().any(|version| version.id == "1.12.2") {
+            return versions;
+        }
+
+        let mut versions = versions.to_vec();
+        versions.push(GameVersion {
+            id: "1.12.2".to_string(),
+            kind: GameVersionKind::Release,
+            released: "07 Jun 2017".to_string(),
+        });
+        versions.sort_by_key(|version| std::cmp::Reverse(version_sort_key(&version.id)));
+        versions.into()
+    });
+
     Catalogue {
         oneclient,
         oneclient_settled: metadata.is_some(),
-        vanilla: game_versions(&vanilla_query),
+        vanilla,
         java: java_majors(&java_query),
         error,
     }
