@@ -538,6 +538,7 @@ async fn account_from_msa_token(
         username: profile.name,
         access_token: minecraft_token.access_token,
         refresh_token: msa.refresh_token,
+        client_token: Uuid::new_v4().to_string(),
         #[allow(clippy::cast_possible_wrap)]
         expires: msa.obtained_at + chrono::TimeDelta::seconds(msa.expires_in as i64),
         kind: AccountKind::Microsoft,
