@@ -11,7 +11,7 @@ use crate::components::{
 };
 use crate::hooks::{
     AddOfflineAccountKeys, RefreshAccountKeys, RemoveAccountKeys, SetDefaultAccountKeys,
-    accounts_have_microsoft, try_accounts, try_default_account, use_accounts,
+    try_accounts, try_default_account, use_accounts,
     use_add_ely_by_account,
     use_add_offline_account, use_current_account, use_refresh_account, use_remove_account,
     use_set_default_account,
@@ -131,7 +131,6 @@ impl Component for SettingsAccounts {
         settings_page()
             .child(hero(
                 default_account,
-                false,
                 ely.read().state().is_loading(),
                 ely_error.clone(),
                 move |_| show_offline.set(true),
@@ -164,7 +163,6 @@ impl Component for SettingsAccounts {
 
 fn hero(
     account: Option<MinecraftAccount>,
-    _has_microsoft: bool,
     ely_pending: bool,
     error: Option<String>,
     on_open_offline: impl FnMut(Event<PressEventData>) + 'static,
