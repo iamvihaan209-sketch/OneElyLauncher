@@ -31,7 +31,7 @@ pub use actions::{Actions, NotificationBuilder, PumpSignal, modpack_job_running}
 pub use queries::ALL_VERSIONS;
 pub(crate) use queries::use_folder_watch;
 pub use queries::{
-    AddOfflineAccountKeys, AvailableBundlesQuery, BROWSE_PAGE_SIZE, BeginMicrosoftLoginMutation,
+    AddElyByAccountKeys, AvailableBundlesQuery, BROWSE_PAGE_SIZE, BeginMicrosoftLoginMutation,
     CachedImageQuery, CancelMicrosoftLoginKeys, CancelMicrosoftLoginMutation, ClusterAction,
     ClusterBundles, ClusterLogsQuery, ClusterMutation, DisableWarningsQuery, DiscardLeftoversKeys,
     DiscardLeftoversMutation, FinishMicrosoftLoginMutation, GameVersion, JavaMajorsQuery,
@@ -55,7 +55,7 @@ pub use queries::{
     terms_document, terms_error, terms_is_loading, try_account, try_accounts,
     try_cluster_analytics, try_cluster_logs, try_cluster_screenshots, try_default_account,
     try_game_profile, try_global_analytics, try_leftovers, try_log_content, try_storage_report,
-    use_account, use_accounts, use_add_microsoft_account, use_add_offline_account,
+    use_account, use_accounts, use_add_ely_by_account, use_add_microsoft_account, use_add_offline_account,
     use_available_bundles, use_begin_microsoft_login, use_bundle_overrides, use_bundle_updates,
     use_bundles_with_status, use_cached_image, use_cancel_microsoft_login, use_changelog,
     use_cluster, use_cluster_analytics, use_cluster_content, use_cluster_logs,
