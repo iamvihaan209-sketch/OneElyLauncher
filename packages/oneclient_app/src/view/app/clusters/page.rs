@@ -93,6 +93,7 @@ impl Component for Clusters {
         let clusters_query = use_clusters();
         let active_id = use_active_cluster_id();
         let show_create = use_state(|| false);
+        let show_vanilla = use_state(|| false);
         let mut selected = use_state(|| None::<GridSelection>);
         let mut selected_cluster = use_state(|| None::<i64>);
         let mut filter = use_state(|| Filter::All);
@@ -117,7 +118,7 @@ impl Component for Clusters {
                 .overflow(Overflow::Clip)
                 .padding(PAGE_PADDING)
                 .spacing(24.)
-                .child(page_header(show_create))
+                 .child(page_header(show_create, show_vanilla))
                 .child(
                     rect()
                         .vertical()
@@ -130,7 +131,8 @@ impl Component for Clusters {
                                 .color(colors::fg_secondary()),
                         ),
                 )
-                .maybe_child(create_modal(show_create));
+                 .maybe_child(create_modal(show_create, false))
+                .maybe_child(create_modal(show_vanilla, true));
         }
 
         let active_cluster = active_id
@@ -346,7 +348,7 @@ impl Component for Clusters {
                             .height(Size::fill())
                             .content(Content::Flex)
                             .spacing(18.)
-                            .child(page_header(show_create))
+                             .child(page_header(show_create, show_vanilla))
                             .child(toolbar(tabs, query, inline_search.then(|| filters.clone())))
                             .maybe_child((!inline_search).then(|| {
                                 rect()
@@ -408,14 +410,20 @@ impl Component for Clusters {
                     )
                     .child(sidebar),
             )
-            .maybe_child(create_modal(show_create))
+             .maybe_child(create_modal(show_create, false))
+            .maybe_child(create_modal(show_vanilla, true))
     }
 }
 
-fn create_modal(mut show_create: State<bool>) -> Option<Element> {
-    show_create
-        .read()
-        .then(|| CreateInstanceModal::new(move |()| show_create.set(false)).into_element())
+fn create_modal(mut show_create: State<bool>, vanilla: bool) -> Option<Element> {
+    show_create.read().then(|| {
+        let close = move |()| show_create.set(false);
+        if vanilla {
+            CreateInstanceModal::vanilla(close).into_element()
+        } else {
+            CreateInstanceModal::new(close).into_element()
+        }
+    })
 }
 
 fn shown<'a>(
@@ -916,7 +924,7 @@ fn play_button(
         .text(label)
 }
 
-fn page_header(mut show_create: State<bool>) -> impl IntoElement {
+fn page_header(mut show_create: State<bool>, mut show_vanilla: State<bool>) -> impl IntoElement {
     rect()
         .horizontal()
         .width(Size::fill())
@@ -941,6 +949,13 @@ fn page_header(mut show_create: State<bool>) -> impl IntoElement {
                         .font_size(13.)
                         .color(colors::fg_secondary()),
                 ),
+        )
+        .child(
+            Button::new()
+                .secondary()
+                .on_press(move |_| show_vanilla.set(true))
+                .child(Icon::new(IconType::Plus).size(16.))
+                .text("Vanilla instance"),
         )
         .child(
             Button::new()
